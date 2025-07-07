@@ -1,11 +1,13 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const os = require('os');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1000,
+    width: 1200,
     height: 700,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -16,29 +18,30 @@ function createWindow() {
 
   win.removeMenu();
   win.loadFile('index.html');
+  //win.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
   createWindow();
 });
 
-// LibGen lekérés kezelése IPC-n keresztül
 ipcMain.handle('fetch-libgen', async (event, query) => {
-  const url = `https://libgen.li/index.php?req=${encodeURIComponent(query)}&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res=100&filesuns=all`;
+  const url = `https://libgen.li/index.php?req=${encodeURIComponent(query)}&res=100&columns[]=t`;
 
   try {
-    const response = await axios.get(url);
-    const html = response.data;
-    const $ = cheerio.load(html);
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
 
-    let results = [];
+    const $ = cheerio.load(response.data);
+    const results = [];
 
-    // Keresünk egy táblázatot, aminek vannak sorai, ahol könyv adatok vannak
-    $('table tbody tr').each((i, elem) => {
-      const tds = $(elem).find('td');
-      if (tds.length < 8) return; // nincs elég oszlop, nem könyv adat
+    $('table tbody tr').slice(1).each((i, row) => {
+      const tds = $(row).find('td');
+      if (tds.length < 9) return;
 
-      // Kinyerjük a fontos adatokat
       const title = $(tds[0]).text().trim();
       const author = $(tds[1]).text().trim();
       const publisher = $(tds[2]).text().trim();
@@ -48,11 +51,125 @@ ipcMain.handle('fetch-libgen', async (event, query) => {
       const fileSize = $(tds[6]).text().trim();
       const extension = $(tds[7]).text().trim();
 
-      results.push({ title, author, publisher, year, language, pages, fileSize, extension });
+      const md5Link = $(tds[8]).find('a[href*="ads.php?md5="]').attr('href');
+      const md5Match = md5Link?.match(/md5=([a-fA-F0-9]{32})/);
+      const md5 = md5Match ? md5Match[1] : null;
+
+      //console.log(md5);
+
+      if (md5) {
+        results.push({ title, author, publisher, year, language, pages, fileSize, extension, md5 });
+      }
     });
 
     return results;
   } catch (error) {
     return { error: error.message };
+  }
+});
+
+ipcMain.handle('get-libgen-download-link', async (event, md5) => {
+  const detailUrl = `https://libgen.li/ads.php?md5=${md5}`;
+  //console.log(`🔍 Megnyitás: ${detailUrl}`);
+
+  try {
+    const response = await axios.get(detailUrl);
+    const $ = cheerio.load(response.data);
+
+    const getLink = $('td[bgcolor="#A9F5BC"] a')
+      .attr('href');
+
+    if (!getLink) {
+      console.warn('❌ Nem található <a href="get.php?..."> letöltési link.');
+      return { error: 'Nincs letöltési link' };
+    }
+
+    const fullLink = getLink.startsWith('http')
+      ? getLink
+      : `https://libgen.li/${getLink}`;
+
+    //console.log(`✅ Letöltési link: ${fullLink}`);
+    return fullLink;
+
+  } catch (err) {
+    console.error('❌ Hiba:', err.message);
+    return { error: err.message };
+  }
+});
+
+ipcMain.on('start-download', async (event, md5) => {
+  const detailUrl = `https://libgen.li/ads.php?md5=${md5}`;
+  event.sender.send('download-status', 'Megnyitás: ' + detailUrl);
+
+  try {
+    const detailResponse = await axios.get(detailUrl);
+    const $ = require('cheerio').load(detailResponse.data);
+    const getLink = $('td[bgcolor="#A9F5BC"] a').attr('href');
+
+    if (!getLink) {
+      event.sender.send('download-error', 'Nincs letöltési link');
+      return;
+    }
+
+    const fullLink = getLink.startsWith('http') ? getLink : `https://libgen.li/${getLink}`;
+    event.sender.send('download-status', 'Letöltési link: ' + fullLink);
+
+    const downloadsDir = path.join(os.homedir(), 'libgenbooks');
+    if (!fs.existsSync(downloadsDir)) {
+      fs.mkdirSync(downloadsDir, { recursive: true });
+    }
+    const filePath = path.join(downloadsDir, `${md5}.pdf`);
+
+    const response = await axios({
+      method: 'GET',
+      url: fullLink,
+      responseType: 'stream',
+    });
+
+    const totalLength = parseInt(response.headers['content-length'], 10) || 0;
+    if (!totalLength) {
+      event.sender.send('download-status', 'Figyelmeztetés: Nem érkezett content-length fejléc.');
+    }
+
+    const writer = fs.createWriteStream(filePath);
+    response.data.pipe(writer);
+
+    const intervalId = setInterval(() => {
+      fs.stat(filePath, (err, stats) => {
+        if (err) {
+          console.error('fs.stat hiba:', err.message);
+          return;
+        }
+        const downloadedLength = stats.size;
+        event.sender.send('download-status',
+          `Letöltés: ${(downloadedLength / 1024 / 1024).toFixed(2)} MB / ${(totalLength / 1024 / 1024).toFixed(2)} MB`
+        );
+        //console.log(`Letöltés: ${(downloadedLength / 1024 / 1024).toFixed(2)} MB / ${(totalLength / 1024 / 1024).toFixed(2)} MB`);
+      });
+    }, 3000);
+
+    writer.on('finish', () => {
+      clearInterval(intervalId);
+      event.sender.send('download-status', 'Letöltés kész!');
+      event.sender.send('download-done', filePath);
+    });
+
+    writer.on('error', (err) => {
+      clearInterval(intervalId);
+      event.sender.send('download-error', err.message);
+    });
+
+  } catch (err) {
+    event.sender.send('download-error', err.message);
+  }
+});
+
+ipcMain.handle('list-downloads-folder', async () => {
+  try {
+    const downloadsPath = path.join(os.homedir(), 'libgenbooks');
+    const files = await fs.promises.readdir(downloadsPath);
+    return files;
+  } catch (err) {
+    return { error: err.message };
   }
 });
