@@ -27,6 +27,9 @@ app.whenReady().then(() => {
 
 function loadFromConfig() {
   try {
+    /*
+    /home/username/.config/libgen-electron/
+    */
     const configPath = path.join(app.getPath('userData'), 'config.json');
     if (fs.existsSync(configPath)) {
       const raw = fs.readFileSync(configPath, 'utf-8');
