@@ -15,19 +15,45 @@ async function showPage(page) {
         }
       });
     }
-
+    
     else if (page === 'downloadedBooksList') {
-      window.electronAPI.listDownloads().then(files => {
-        const list = document.getElementById('downloadsList');
-        if (files.error) {
-          list.innerHTML = `<li style="color: red;">Hiba: ${files.error}</li>`;
+      const list = document.getElementById('downloadsList');
+      const searchBox = document.getElementById('searchBox');
+      let allBooks = [];
+
+      const renderBooks = (books) => {
+        list.innerHTML = '';
+        if (books.length === 0) {
+          list.innerHTML = '<tr><td colspan="5">Nincs találat.</td></tr>';
           return;
         }
-        if (files.length === 0) {
-          list.innerHTML = '<li>Nincs fájl a Letöltések mappában.</li>';
+
+        books.forEach(book => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${book.title || ''}</td>
+            <td>${book.author || ''}</td>
+            <td>${book.year || ''}</td>
+            <td>${book.pages || ''}</td>
+            <td>${book.fileSize || ''}</td>
+          `;
+          list.appendChild(row);
+        });
+      };
+
+      window.electronAPI.listDownloads().then(books => {
+        if (books.error) {
+          list.innerHTML = `<tr><td colspan="5" style="color: red;">Hiba: ${books.error}</td></tr>`;
           return;
         }
-        list.innerHTML = files.map(f => `<li>${f}</li>`).join('');
+        allBooks = books;
+        renderBooks(allBooks);
+      });
+
+      searchBox.addEventListener('input', () => {
+        const query = searchBox.value.toLowerCase();
+        const filtered = allBooks.filter(book => (book.title || '').toLowerCase().includes(query));
+        renderBooks(filtered);
       });
     }
 
@@ -81,8 +107,13 @@ async function performSearch() {
       setTimeout(async () => {
         const downloadUrl = await window.electronAPI.getDownloadLink(book.md5);
         if (typeof downloadUrl === 'string' && downloadUrl.startsWith('http')) {
-          await window.electronAPI.startDownload(book.md5);
-          await window.electronAPI.downloadMetadataToJson(book.md5, results);
+          const result = await window.electronAPI.startDownload(book.md5);
+
+          if (result.success) {
+            await window.electronAPI.downloadMetadataToJson(book.md5, results);
+          } else {
+            alert('Letöltési hiba: ' + result.error);
+          }
         } else {
           alert('Hiba a letöltési linkkel.');
         }

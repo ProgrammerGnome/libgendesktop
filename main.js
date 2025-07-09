@@ -18,7 +18,7 @@ function createWindow() {
 
   win.removeMenu();
   win.loadFile('index.html');
-  win.webContents.openDevTools(); //devtools debughoz
+  //win.webContents.openDevTools(); //devtools debughoz
 }
 
 app.whenReady().then(() => {
@@ -124,18 +124,19 @@ ipcMain.handle('get-libgen-download-link', async (event, md5) => {
   }
 });
 
-ipcMain.on('start-download', async (event, md5) => {
+ipcMain.handle('start-download', async (event, md5) => {
   const detailUrl = `https://libgen.li/ads.php?md5=${md5}`;
-  event.sender.send('download-status', 'Megnyitás: ' + detailUrl);
 
   try {
+    event.sender.send('download-status', 'Megnyitás: ' + detailUrl);
+
     const detailResponse = await axios.get(detailUrl);
     const $ = require('cheerio').load(detailResponse.data);
     const getLink = $('td[bgcolor="#A9F5BC"] a').attr('href');
 
     if (!getLink) {
       event.sender.send('download-error', 'Nincs letöltési link');
-      return;
+      return { error: 'Nincs letöltési link' };
     }
 
     const fullLink = getLink.startsWith('http') ? getLink : `https://libgen.li/${getLink}`;
@@ -145,6 +146,7 @@ ipcMain.on('start-download', async (event, md5) => {
     if (!fs.existsSync(downloadsDir)) {
       fs.mkdirSync(downloadsDir, { recursive: true });
     }
+
     const filePath = path.join(downloadsDir, `${md5}.pdf`);
 
     const response = await axios({
@@ -171,23 +173,23 @@ ipcMain.on('start-download', async (event, md5) => {
         event.sender.send('download-status',
           `Letöltés: ${(downloadedLength / 1024 / 1024).toFixed(2)} MB / ${(totalLength / 1024 / 1024).toFixed(2)} MB`
         );
-        //console.log(`Letöltés: ${(downloadedLength / 1024 / 1024).toFixed(2)} MB / ${(totalLength / 1024 / 1024).toFixed(2)} MB`);
       });
-    }, 3000);
+    }, 1500); // in millisecond
 
-    writer.on('finish', () => {
-      clearInterval(intervalId);
-      event.sender.send('download-status', 'Letöltés kész!');
-      event.sender.send('download-done', filePath);
+    await new Promise((resolve, reject) => {
+      writer.on('finish', resolve);
+      writer.on('error', reject);
     });
 
-    writer.on('error', (err) => {
-      clearInterval(intervalId);
-      event.sender.send('download-error', err.message);
-    });
+    clearInterval(intervalId);
+    event.sender.send('download-status', 'Letöltés kész!');
+    event.sender.send('download-done', filePath);
+
+    return { success: true, filePath };
 
   } catch (err) {
     event.sender.send('download-error', err.message);
+    return { error: err.message };
   }
 });
 
@@ -195,7 +197,26 @@ ipcMain.handle('list-downloads-folder', async () => {
   try {
     const downloadsPath = path.join(os.homedir(), 'libgenbooks');
     const files = await fs.promises.readdir(downloadsPath);
-    return files;
+
+    const metadataFiles = files.filter(file => file.endsWith('_metadata.json'));
+
+    const books = await Promise.all(
+      metadataFiles.map(async (filename) => {
+        const filePath = path.join(downloadsPath, filename);
+        const content = await fs.promises.readFile(filePath, 'utf-8');
+        const data = JSON.parse(content);
+
+        return {
+          title: data.title || 'Ismeretlen',
+          author: data.author || 'Ismeretlen',
+          year: data.year || '',
+          pages: data.pages || '',
+          fileSize: data.fileSize || '',
+        };
+      })
+    );
+
+    return books;
   } catch (err) {
     return { error: err.message };
   }
