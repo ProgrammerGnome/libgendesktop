@@ -74,13 +74,15 @@ async function performSearch() {
     `;
 
     row.style.cursor = 'pointer';
+    //console.log("Mikori: ",row);
     row.addEventListener('click', async () => {
       showPage('downloadProgress');
 
       setTimeout(async () => {
         const downloadUrl = await window.electronAPI.getDownloadLink(book.md5);
         if (typeof downloadUrl === 'string' && downloadUrl.startsWith('http')) {
-          window.electronAPI.startDownload(book.md5);
+          await window.electronAPI.startDownload(book.md5);
+          await window.electronAPI.downloadMetadataToJson(book.md5, results);
         } else {
           alert('Hiba a letöltési linkkel.');
         }

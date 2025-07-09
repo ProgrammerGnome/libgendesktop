@@ -18,7 +18,7 @@ function createWindow() {
 
   win.removeMenu();
   win.loadFile('index.html');
-  //win.webContents.openDevTools();
+  win.webContents.openDevTools(); //devtools debughoz
 }
 
 app.whenReady().then(() => {
@@ -68,9 +68,37 @@ ipcMain.handle('fetch-libgen', async (event, query) => {
   }
 });
 
+ipcMain.handle('download-metadata-to-json', async (event, id, results) => {
+  try {
+    const book = results.find(item => item.md5 === id);
+    
+    if (!book) {
+      return { error: 'Book not found in results' };
+    }
+
+    const downloadsDir = path.join(os.homedir(), 'libgenbooks');
+    if (!fs.existsSync(downloadsDir)) {
+      fs.mkdirSync(downloadsDir, { recursive: true });
+    }
+
+    const fullMetadata = {
+      ...book,
+      downloadDate: new Date().toISOString(),
+      source: 'LibGen',
+      metadataVersion: '1.0'
+    };
+
+    const filePath = path.join(downloadsDir, `${id}_metadata.json`);
+    fs.writeFileSync(filePath, JSON.stringify(fullMetadata, null, 2));
+
+    return { success: true, filePath };
+  } catch (error) {
+    return { error: error.message };
+  }
+});
+
 ipcMain.handle('get-libgen-download-link', async (event, md5) => {
   const detailUrl = `https://libgen.li/ads.php?md5=${md5}`;
-  //console.log(`🔍 Megnyitás: ${detailUrl}`);
 
   try {
     const response = await axios.get(detailUrl);
@@ -87,8 +115,7 @@ ipcMain.handle('get-libgen-download-link', async (event, md5) => {
     const fullLink = getLink.startsWith('http')
       ? getLink
       : `https://libgen.li/${getLink}`;
-
-    //console.log(`✅ Letöltési link: ${fullLink}`);
+      
     return fullLink;
 
   } catch (err) {

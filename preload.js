@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   fetchLibgen: (query) => ipcRenderer.invoke('fetch-libgen', query),
   getDownloadLink: (md5) => ipcRenderer.invoke('get-libgen-download-link', md5),
   startDownload: (md5) => ipcRenderer.send('start-download', md5),
+  downloadMetadataToJson: (id, results) => ipcRenderer.invoke('download-metadata-to-json', id, results),
 
   onDownloadStatus: (callback) => ipcRenderer.on('download-status', callback),
   onDownloadDone: (callback) => ipcRenderer.on('download-done', callback),
