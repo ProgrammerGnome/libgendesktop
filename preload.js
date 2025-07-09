@@ -11,4 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDownloadError: (callback) => ipcRenderer.on('download-error', callback),
 
   listDownloads: () => ipcRenderer.invoke('list-downloads-folder'),
+
+  getConfig: () => ipcRenderer.invoke('get-config'),
+  setConfig: (path) => ipcRenderer.invoke('set-config', path),
 });

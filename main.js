@@ -18,11 +18,41 @@ function createWindow() {
 
   win.removeMenu();
   win.loadFile('index.html');
-  //win.webContents.openDevTools(); //devtools debughoz
+  win.webContents.openDevTools(); //devtools debughoz
 }
 
 app.whenReady().then(() => {
   createWindow();
+});
+
+function loadFromConfig() {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'config.json');
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      return parsed;
+    }
+  } catch (err) {
+    console.error('Hiba a config betöltésekor:', err.message);
+  }
+  return null;
+}
+
+let downloadDir = loadFromConfig()?.downloadDir || path.join(os.homedir(), 'libgenbooks');
+ipcMain.handle('get-config', () => {
+  return { downloadDir };
+});
+
+ipcMain.handle('set-config', async (event, newPath) => {
+  try {
+    downloadDir = newPath;
+    const configPath = path.join(app.getPath('userData'), 'config.json');
+    fs.writeFileSync(configPath, JSON.stringify({ downloadDir: newPath }, null, 2));
+    return { success: true, path: newPath };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 ipcMain.handle('fetch-libgen', async (event, query) => {
@@ -76,7 +106,7 @@ ipcMain.handle('download-metadata-to-json', async (event, id, results) => {
       return { error: 'Book not found in results' };
     }
 
-    const downloadsDir = path.join(os.homedir(), 'libgenbooks');
+    const downloadsDir = path.join(downloadDir);
     if (!fs.existsSync(downloadsDir)) {
       fs.mkdirSync(downloadsDir, { recursive: true });
     }
@@ -142,7 +172,7 @@ ipcMain.handle('start-download', async (event, md5) => {
     const fullLink = getLink.startsWith('http') ? getLink : `https://libgen.li/${getLink}`;
     event.sender.send('download-status', 'Letöltési link: ' + fullLink);
 
-    const downloadsDir = path.join(os.homedir(), 'libgenbooks');
+    const downloadsDir = path.join(downloadDir);
     if (!fs.existsSync(downloadsDir)) {
       fs.mkdirSync(downloadsDir, { recursive: true });
     }
@@ -195,7 +225,7 @@ ipcMain.handle('start-download', async (event, md5) => {
 
 ipcMain.handle('list-downloads-folder', async () => {
   try {
-    const downloadsPath = path.join(os.homedir(), 'libgenbooks');
+    const downloadsPath = path.join(downloadDir);
     const files = await fs.promises.readdir(downloadsPath);
 
     const metadataFiles = files.filter(file => file.endsWith('_metadata.json'));

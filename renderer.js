@@ -15,8 +15,8 @@ async function showPage(page) {
         }
       });
     }
-    
-    else if (page === 'downloadedBooksList') {
+
+    else if (page === 'downloadedBooksListSite') {
       const list = document.getElementById('downloadsList');
       const searchBox = document.getElementById('searchBox');
       let allBooks = [];
@@ -54,6 +54,31 @@ async function showPage(page) {
         const query = searchBox.value.toLowerCase();
         const filtered = allBooks.filter(book => (book.title || '').toLowerCase().includes(query));
         renderBooks(filtered);
+      });
+    }
+
+    else if (page === 'settingsSite') {
+      const dirInput = document.getElementById('dirInput');
+      const status = document.getElementById('saveStatus');
+      const currentDirText = document.getElementById('currentDir');
+      const saveBtn = document.getElementById('saveBtn');
+
+      const config = await window.electronAPI.getConfig();
+      const current = config?.downloadDir || '';
+      currentDirText.textContent = current;
+      dirInput.value = current;
+
+      saveBtn.addEventListener('click', async () => {
+        const newPath = dirInput.value;
+        const result = await window.electronAPI.setConfig(newPath);
+        if (result.success) {
+          status.textContent = `Könyvtár mentve: ${result.path}`;
+          status.style.color = 'green';
+          currentDirText.textContent = result.path;
+        } else {
+          status.textContent = `Hiba: ${result.error}`;
+          status.style.color = 'red';
+        }
       });
     }
 
