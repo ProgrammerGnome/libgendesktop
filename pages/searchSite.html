@@ -1,14 +1,23 @@
-<h1>LibGen Könyv Kereső</h1>
-<input type="text" id="searchInput" placeholder="Keresés..." size="40">
-<button onclick="performSearch()">Keresés</button>
+<h1 data-i18n="appTitle">LibGen Könyv Kereső</h1>
+
+<input type="text" id="searchInput" data-i18n-placeholder="searchByTitle" placeholder="Keresés cím szerint..." style="margin-bottom: 1em; width: 50%; padding: 0.5em;">
+
+<button class="button" onclick="performSearch()" data-i18n="search">Keresés</button>
+
 <p id="status"></p>
-<table id="resultsTable" style="display:none;">
+
+<table id="resultsTable" border="1" cellspacing="0" cellpadding="5">
   <thead>
     <tr>
-      <th>Cím</th><th>Szerző</th><th>Kiadó</th><th>Év</th>
-      <th>Nyelv</th><th>Oldal</th><th>Méret</th><th>Formátum</th>
+      <th data-i18n="title">Cím</th>
+      <th data-i18n="author">Szerző</th>
+      <th data-i18n="publisher">Kiadó</th>
+      <th data-i18n="year">Év</th>
+      <th data-i18n="language">Nyelv</th>
+      <th data-i18n="pages">Oldal</th>
+      <th data-i18n="size">Méret</th>
+      <th data-i18n="format">Formátum</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody>Itt fognak megjelenni a találatok...<br></br></tbody>
 </table>
-

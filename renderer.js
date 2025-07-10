@@ -1,6 +1,67 @@
+const i18next = window.i18next;
+const Backend = window.i18nextHttpBackend;
+
+const savedLang = localStorage.getItem('appLang') || 'hu';
+
+window.i18next
+  .use(window.i18nextHttpBackend)
+  .init({
+    lng: savedLang,
+    fallbackLng: 'en',
+    backend: {
+      loadPath: 'locales/{{lng}}/{{ns}}.json'
+    }
+  })
+  .then(() => {
+    console.log('i18next initialized');
+    updateContent();
+    setupLangButton();
+  });
+
+function updateContent() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (window.i18next && typeof window.i18next.t === 'function') {
+      el.textContent = window.i18next.t(key);
+    } else {
+      console.warn('i18next nincs inicializálva');
+    }
+  });
+}
+
+function setupLangButton() {
+    const langBtn = document.getElementById('langBtn');
+    if (!langBtn) return;
+
+    langBtn.textContent = window.i18next.language.toUpperCase();
+    langBtn.replaceWith(langBtn.cloneNode(true));
+    const newLangBtn = document.getElementById('langBtn');
+
+    newLangBtn.addEventListener('click', () => {
+      const currentLang = window.i18next.language;
+      const newLang = currentLang === 'hu' ? 'en' : 'hu';
+
+      window.i18next.changeLanguage(newLang, (err, t) => {
+        if (err) {
+          console.error('Nyelvváltás hiba:', err);
+          return;
+        }
+        localStorage.setItem('appLang', newLang);
+        updateContent();
+        newLangBtn.textContent = newLang.toUpperCase();
+      });
+    });
+  }
+
 async function showPage(page) {
   const main = document.getElementById('mainContent');
   main.innerHTML = '';
+
+  updateContent();
+
+  function formatValue(value) {
+    return value === undefined || value === null || value === '' || value === '0'? 'N.A.' : value;
+  }
 
   try {
     const response = await fetch(`pages/${page}.html`);
@@ -31,11 +92,12 @@ async function showPage(page) {
         books.forEach(book => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${book.title || ''}</td>
-            <td>${book.author || ''}</td>
-            <td>${book.year || ''}</td>
-            <td>${book.pages || ''}</td>
-            <td>${book.fileSize || ''}</td>
+            <td>${formatValue(book.title)}</td>
+            <td>${formatValue(book.author)}</td>
+            <td>${formatValue(book.year)}</td>
+            <td>${formatValue(book.pages)}</td>
+            <td>${formatValue(book.extension)}</td>
+            <td>${formatValue(book.fileSize)}</td>
           `;
           list.appendChild(row);
         });
@@ -80,7 +142,11 @@ async function showPage(page) {
           status.style.color = 'red';
         }
       });
+      setupLangButton();
     }
+    
+    updateContent();
+    setupLangButton();
 
   } catch (err) {
     main.innerHTML = `<p style="color:red;">Hiba történt: ${err.message}</p>`;
@@ -88,6 +154,10 @@ async function showPage(page) {
 }
 
 async function performSearch() {
+  function formatValue(value) {
+    return value === undefined || value === null || value === '' || value === '0'? 'N.A.' : value;
+  }
+
   const query = document.getElementById('searchInput').value;
   const status = document.getElementById('status');
   const table = document.getElementById('resultsTable');
@@ -114,14 +184,14 @@ async function performSearch() {
   results.forEach(book => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${book.title}</td>
-      <td>${book.author}</td>
-      <td>${book.publisher}</td>
-      <td>${book.year}</td>
-      <td>${book.language}</td>
-      <td>${book.pages}</td>
-      <td>${book.fileSize}</td>
-      <td>${book.extension}</td>
+      <td>${formatValue(book.title)}</td>
+      <td>${formatValue(book.author)}</td>
+      <td>${formatValue(book.publisher)}</td>
+      <td>${formatValue(book.year)}</td>
+      <td>${formatValue(book.language)}</td>
+      <td>${formatValue(book.pages)}</td>
+      <td>${formatValue(book.fileSize)}</td>
+      <td>${formatValue(book.extension)}</td>
     `;
 
     row.style.cursor = 'pointer';
@@ -132,7 +202,7 @@ async function performSearch() {
       setTimeout(async () => {
         const downloadUrl = await window.electronAPI.getDownloadLink(book.md5);
         if (typeof downloadUrl === 'string' && downloadUrl.startsWith('http')) {
-          const result = await window.electronAPI.startDownload(book.md5);
+          const result = await window.electronAPI.startDownload(book.md5, book.extension);
 
           if (result.success) {
             await window.electronAPI.downloadMetadataToJson(book.md5, results);

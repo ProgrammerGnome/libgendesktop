@@ -18,7 +18,7 @@ function createWindow() {
 
   win.removeMenu();
   win.loadFile('index.html');
-  win.webContents.openDevTools(); //devtools debughoz
+  //win.webContents.openDevTools(); //devtools debughoz
 }
 
 app.whenReady().then(() => {
@@ -157,7 +157,7 @@ ipcMain.handle('get-libgen-download-link', async (event, md5) => {
   }
 });
 
-ipcMain.handle('start-download', async (event, md5) => {
+ipcMain.handle('start-download', async (event, md5, extension) => {
   const detailUrl = `https://libgen.li/ads.php?md5=${md5}`;
 
   try {
@@ -180,7 +180,7 @@ ipcMain.handle('start-download', async (event, md5) => {
       fs.mkdirSync(downloadsDir, { recursive: true });
     }
 
-    const filePath = path.join(downloadsDir, `${md5}.pdf`);
+    const filePath = path.join(downloadsDir, `${md5}.${extension}`);
 
     const response = await axios({
       method: 'GET',
@@ -244,6 +244,7 @@ ipcMain.handle('list-downloads-folder', async () => {
           author: data.author || 'Ismeretlen',
           year: data.year || '',
           pages: data.pages || '',
+          extension: data.extension || '',
           fileSize: data.fileSize || '',
         };
       })

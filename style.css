@@ -33,3 +33,24 @@ main {
   padding: 20px;
   overflow-y: auto;
 }
+
+.button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+  background-color: #45a049;
+}
+
+.button:active {
+  transform: scale(0.98);
+}

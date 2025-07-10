@@ -1,12 +1,12 @@
 <div>
-  <h2>Beállítások</h2>
-  
-  <p>Jelenlegi könyvtár: <span id="currentDir">...</span></p>
-  
-  <label for="dirInput">Új letöltési könyvtár:</label><br>
-  <input type="text" id="dirInput" placeholder="Új útvonal megadása" style="width: 100%; max-width: 400px;" /><br><br>
-  
-  <button id="saveBtn">Mentés</button>
-  
+  <h2 data-i18n="settings">Beállítások</h2>
+
+  <p><span data-i18n="currentPath">Jelenlegi könyvtár:</span> <span id="currentDir">...</span></p>
+
+  <label for="dirInput" data-i18n="newDownloadDir">Új letöltési könyvtár:</label><br>
+  <input type="text" id="dirInput" placeholder="Új útvonal megadása" style="margin-bottom: 1em; width: 50%; padding: 0.5em;">
+
+  <button class="button" id="saveBtn" data-i18n="save">Mentés</button>
+
   <p id="saveStatus" style="margin-top: 10px;"></p>
 </div>
