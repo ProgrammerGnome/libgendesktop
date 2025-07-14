@@ -27,5 +27,6 @@
   "menu_opt_downloads": "Letöltött könyvek",
   "menu_opt_settings": "Beállítások",
   "homeLabel": "A választható opciók",
-  "languageLabel": "Nyelvi beállítások"
+  "languageLabel": "Nyelvi beállítások",
+  "dataView": "Itt fognak megjelenni a találatok..."
 }

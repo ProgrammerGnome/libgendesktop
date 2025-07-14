@@ -27,6 +27,10 @@ function updateContent() {
       console.warn('i18next nincs inicializálva');
     }
   });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.setAttribute('placeholder', i18next.t(key));
+  });
 }
 
 function setupLangButton() {
