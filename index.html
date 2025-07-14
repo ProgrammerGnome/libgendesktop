@@ -7,10 +7,14 @@
 </head>
 <body>
   <nav>
-    <button onclick="showPage('homeSite')">Kezdőlap</button>
-    <button onclick="showPage('searchSite')">Könyvkereső</button>
-    <button onclick="showPage('downloadedBooksListSite')">Letöltött könyvek</button>
-    <button onclick="showPage('settingsSite')">Beállítások</button>
+    <p></p>
+    <span data-i18n="homeLabel">A választható opciók:</span>
+    <button onclick="showPage('homeSite')" data-i18n="menu_opt_home">Kezdőlap</button>
+    <button onclick="showPage('searchSite')" data-i18n="menu_opt_search">Könyvkereső</button>
+    <button onclick="showPage('downloadedBooksListSite')" data-i18n="menu_opt_downloads">Letöltött könyvek</button>
+    <button onclick="showPage('settingsSite')" data-i18n="menu_opt_settings">Beállítások</button>
+    <p></p>
+    <span data-i18n="languageLabel">Nyelv:</span>
     <button id="langBtn">EN</button>
   </nav>
 

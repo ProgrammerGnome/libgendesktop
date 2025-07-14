@@ -21,5 +21,11 @@
   "directorySaved": "Directory saved:",
   "error": "Error",
   "notAvailable": "N.A.",
-  "invalidLink": "Invalid download link."
+  "invalidLink": "Invalid download link.",
+  "menu_opt_home": "Home",
+  "menu_opt_search": "Book search",
+  "menu_opt_downloads": "Downloaded books",
+  "menu_opt_settings": "Settings",
+  "homeLabel": "Available options",
+  "languageLabel": "Language settings"
 }

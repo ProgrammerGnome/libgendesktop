@@ -21,5 +21,11 @@
   "directorySaved": "Könyvtár mentve:",
   "error": "Hiba",
   "notAvailable": "N.A.",
-  "invalidLink": "Hibás letöltési link."
+  "invalidLink": "Hibás letöltési link.",
+  "menu_opt_home": "Kezdőlap",
+  "menu_opt_search": "Könyvkereső",
+  "menu_opt_downloads": "Letöltött könyvek",
+  "menu_opt_settings": "Beállítások",
+  "homeLabel": "A választható opciók",
+  "languageLabel": "Nyelvi beállítások"
 }
