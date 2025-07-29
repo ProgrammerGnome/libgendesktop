@@ -54,3 +54,30 @@ main {
 .button:active {
   transform: scale(0.98);
 }
+
+.news-section {
+  padding: 1em;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ddd;
+  margin-top: 2em;
+}
+
+.news-item {
+  border-bottom: 1px solid #ccc;
+  padding: 1em 0;
+}
+
+.news-item:last-child {
+  border-bottom: none;
+}
+
+.news-item h3 {
+  margin: 0 0 0.5em 0;
+  color: #333;
+}
+
+.news-item p {
+  margin: 0;
+  color: #555;
+}

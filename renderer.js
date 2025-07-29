@@ -47,7 +47,7 @@ function setupLangButton() {
 
       window.i18next.changeLanguage(newLang, (err, t) => {
         if (err) {
-          console.error('Nyelvváltás hiba:', err);
+          console.error('Lang change error:', err);
           return;
         }
         localStorage.setItem('appLang', newLang);
@@ -89,7 +89,7 @@ async function showPage(page) {
       const renderBooks = (books) => {
         list.innerHTML = '';
         if (books.length === 0) {
-          list.innerHTML = '<tr><td colspan="5">Nincs találat.</td></tr>';
+          list.innerHTML = '<tr><td colspan="5">There are no results.</td></tr>';
           return;
         }
 
@@ -109,7 +109,7 @@ async function showPage(page) {
 
       window.electronAPI.listDownloads().then(books => {
         if (books.error) {
-          list.innerHTML = `<tr><td colspan="5" style="color: red;">Hiba: ${books.error}</td></tr>`;
+          list.innerHTML = `<tr><td colspan="5" style="color: red;">Error: ${books.error}</td></tr>`;
           return;
         }
         allBooks = books;
@@ -142,7 +142,7 @@ async function showPage(page) {
           status.style.color = 'green';
           currentDirText.textContent = result.path;
         } else {
-          status.textContent = `Hiba: ${result.error}`;
+          status.textContent = `Error: ${result.error}`;
           status.style.color = 'red';
         }
       });
@@ -153,7 +153,7 @@ async function showPage(page) {
     setupLangButton();
 
   } catch (err) {
-    main.innerHTML = `<p style="color:red;">Hiba történt: ${err.message}</p>`;
+    main.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
   }
 }
 
@@ -174,15 +174,15 @@ async function performSearch() {
   const results = await window.electronAPI.fetchLibgen(query);
 
   if (results.error) {
-    status.textContent = 'Hiba: ' + results.error;
+    status.textContent = 'Error: ' + results.error;
     return;
   }
   if (results.length === 0) {
-    status.textContent = 'Nincs találat.';
+    status.textContent = 'There are no results.';
     return;
   }
 
-  status.textContent = `${results.length} találat`;
+  status.textContent = `${results.length} results.`;
   table.style.display = 'table';
 
   results.forEach(book => {
@@ -199,7 +199,6 @@ async function performSearch() {
     `;
 
     row.style.cursor = 'pointer';
-    //console.log("Mikori: ",row);
     row.addEventListener('click', async () => {
       showPage('downloadProgress');
 
@@ -211,10 +210,10 @@ async function performSearch() {
           if (result.success) {
             await window.electronAPI.downloadMetadataToJson(book.md5, results);
           } else {
-            alert('Letöltési hiba: ' + result.error);
+            alert('Download error: ' + result.error);
           }
         } else {
-          alert('Hiba a letöltési linkkel.');
+          alert('Download link error');
         }
       }, 100);
     });

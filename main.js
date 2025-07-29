@@ -7,8 +7,8 @@ const os = require('os');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1200,
-    height: 700,
+    width: 1300,
+    height: 750,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -37,7 +37,7 @@ function loadFromConfig() {
       return parsed;
     }
   } catch (err) {
-    console.error('Hiba a config betöltésekor:', err.message);
+    console.error('Error loading config', err.message);
   }
   return null;
 }
@@ -65,7 +65,8 @@ ipcMain.handle('fetch-libgen', async (event, query) => {
     const response = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0'
-      }
+      },
+      timeout: 10000  // 10 sec
     });
 
     const $ = cheerio.load(response.data);
@@ -152,7 +153,7 @@ ipcMain.handle('get-libgen-download-link', async (event, md5) => {
     return fullLink;
 
   } catch (err) {
-    console.error('❌ Hiba:', err.message);
+    console.error('❌ Error:', err.message);
     return { error: err.message };
   }
 });
@@ -199,7 +200,7 @@ ipcMain.handle('start-download', async (event, md5, extension) => {
     const intervalId = setInterval(() => {
       fs.stat(filePath, (err, stats) => {
         if (err) {
-          console.error('fs.stat hiba:', err.message);
+          console.error('fs.stat error:', err.message);
           return;
         }
         const downloadedLength = stats.size;
