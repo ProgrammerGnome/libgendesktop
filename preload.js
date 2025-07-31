@@ -11,4 +11,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   listDownloads: () => ipcRenderer.invoke('list-downloads-folder'),
   getConfig: () => ipcRenderer.invoke('get-config'),
   setConfig: (path) => ipcRenderer.invoke('set-config', path),
+  setMirrorConfig: (url) => ipcRenderer.send('set-mirror-config', url)
 });

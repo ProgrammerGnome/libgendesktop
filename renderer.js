@@ -146,6 +146,48 @@ async function showPage(page) {
           status.style.color = 'red';
         }
       });
+
+      const pingBtn = document.getElementById("pingServersBtn");
+      if (pingBtn) {
+        pingBtn.addEventListener("click", async () => {
+          const servers = [
+            "https://libgen.li",
+            "https://libgen.gs",
+            "https://libgen.vg",
+            "https://libgen.la",
+            "https://libgen.bz",
+            "https://libgen.gl",
+          ];
+
+          const status = document.getElementById("pingStatus");
+          status.textContent = "Pinging servers...";
+
+          const pingTimes = await Promise.allSettled(servers.map(async (url) => {
+            const start = performance.now();
+            try {
+              await fetch(url, { method: "HEAD", mode: "no-cors" });
+              const time = performance.now() - start;
+              return { url, time };
+            } catch (e) {
+              return { url, time: Infinity };
+            }
+          }));
+
+          const fastest = pingTimes
+            .filter(p => p.status === "fulfilled")
+            .map(p => p.value)
+            .sort((a, b) => a.time - b.time)[0];
+
+          if (!fastest || fastest.time === Infinity) {
+            status.textContent = "Failed to reach any server.";
+            return;
+          }
+          
+          status.textContent = `Fastest server: ${fastest.url.replace("https://","")} (${Math.round(fastest.time)} ms). Set in configuration.`;
+          window.electronAPI?.setMirrorConfig?.(fastest.url.replace("https://",""));
+        });
+      }
+      
       setupLangButton();
     }
     

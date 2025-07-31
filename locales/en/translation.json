@@ -28,5 +28,9 @@
   "menu_opt_settings": "Settings",
   "homeLabel": "Available options",
   "languageLabel": "Current language",
-  "dataView": "The results will appear here..."
+  "dataView": "The results will appear here...",
+  "libgenServerSelection": "Libgen server selection",
+  "libgenPingDescription": "This feature pings the following servers and automatically selects the fastest one:",
+  "selectFastestServer": "Select fastest server",
+  "pingStatus": ""
 }

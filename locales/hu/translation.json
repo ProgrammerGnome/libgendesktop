@@ -28,5 +28,9 @@
   "menu_opt_settings": "Beállítások",
   "homeLabel": "A választható opciók",
   "languageLabel": "Jelenlegi nyelv",
-  "dataView": "Itt fognak megjelenni a találatok..."
+  "dataView": "Itt fognak megjelenni a találatok...",
+  "libgenServerSelection": "Libgen szerver kiválasztása",
+  "libgenPingDescription": "Ez a funkció megpingeli a következő szervereket, és automatikusan kiválasztja a leggyorsabbat:",
+  "selectFastestServer": "Leggyorsabb szerver kiválasztása",
+  "pingStatus": ""
 }

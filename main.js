@@ -43,6 +43,8 @@ function loadFromConfig() {
 }
 
 let downloadDir = loadFromConfig()?.downloadDir || path.join(os.homedir(), 'libgenbooks');
+let libgenServer = loadFromConfig()?.libgenServer || 'libgen.li';
+
 ipcMain.handle('get-config', () => {
   return { downloadDir };
 });
@@ -58,8 +60,22 @@ ipcMain.handle('set-config', async (event, newPath) => {
   }
 });
 
+ipcMain.on('set-mirror-config', (event, url) => {
+  const configPath = path.join(app.getPath('userData'), 'config.json');
+  let config = {};
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath));
+    } catch (e) {}
+  }
+
+  config.libgenServer = url;
+
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+});
+
 ipcMain.handle('fetch-libgen', async (event, query) => {
-  const url = `https://libgen.li/index.php?req=${encodeURIComponent(query)}&res=100&columns[]=t`;
+  const url = `https://${libgenServer}/index.php?req=${encodeURIComponent(query)}&res=100&columns[]=t`;
 
   try {
     const response = await axios.get(url, {
@@ -98,6 +114,9 @@ ipcMain.handle('fetch-libgen', async (event, query) => {
 
     return results;
   } catch (error) {
+    if (error.code === 'ECONNABORTED') {
+      return { error: 'Request timed out after 10 seconds. Please set another libgen server url in the settings!' };
+    }
     return { error: error.message };
   }
 });
@@ -132,7 +151,7 @@ ipcMain.handle('download-metadata-to-json', async (event, id, results) => {
 });
 
 ipcMain.handle('get-libgen-download-link', async (event, md5) => {
-  const detailUrl = `https://libgen.li/ads.php?md5=${md5}`;
+  const detailUrl = `https://${libgenServer}/ads.php?md5=${md5}`;
 
   try {
     const response = await axios.get(detailUrl);
@@ -148,7 +167,7 @@ ipcMain.handle('get-libgen-download-link', async (event, md5) => {
 
     const fullLink = getLink.startsWith('http')
       ? getLink
-      : `https://libgen.li/${getLink}`;
+      : `https://${libgenServer}/${getLink}`;
       
     return fullLink;
 
@@ -159,7 +178,7 @@ ipcMain.handle('get-libgen-download-link', async (event, md5) => {
 });
 
 ipcMain.handle('start-download', async (event, md5, extension) => {
-  const detailUrl = `https://libgen.li/ads.php?md5=${md5}`;
+  const detailUrl = `https://${libgenServer}/ads.php?md5=${md5}`;
 
   try {
     event.sender.send('download-status', 'Megnyitás: ' + detailUrl);
@@ -173,7 +192,7 @@ ipcMain.handle('start-download', async (event, md5, extension) => {
       return { error: 'Nincs letöltési link' };
     }
 
-    const fullLink = getLink.startsWith('http') ? getLink : `https://libgen.li/${getLink}`;
+    const fullLink = getLink.startsWith('http') ? getLink : `https://${libgenServer}/${getLink}`;
     event.sender.send('download-status', 'Letöltési link: ' + fullLink);
 
     const downloadsDir = path.join(downloadDir);
