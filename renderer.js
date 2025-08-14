@@ -126,6 +126,7 @@ async function showPage(page) {
     else if (page === 'settingsSite') {
       const dirInput = document.getElementById('dirInput');
       const status = document.getElementById('saveStatus');
+      const savePath = document.getElementById('savePath');
       const currentDirText = document.getElementById('currentDir');
       const saveBtn = document.getElementById('saveBtn');
 
@@ -138,7 +139,8 @@ async function showPage(page) {
         const newPath = dirInput.value;
         const result = await window.electronAPI.setConfig(newPath);
         if (result.success) {
-          status.textContent = `Könyvtár mentve: ${result.path}`;
+          status.style.display= 'block';
+          savePath.textContent = `${result.path}`;
           status.style.color = 'green';
           currentDirText.textContent = result.path;
         } else {
