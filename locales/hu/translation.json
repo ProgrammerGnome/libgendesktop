@@ -11,6 +11,7 @@
   "helloWorld": "Hello Világ",
   "appTitle": "LibGen Könyv Kereső",
   "search": "Keresés",
+  "searching": "Keresés...",
   "noResults": "Nincs találat.",
   "publisher": "Kiadó",
   "language": "Nyelv",
@@ -32,5 +33,10 @@
   "libgenServerSelection": "Libgen szerver kiválasztása",
   "libgenPingDescription": "Ez a funkció megpingeli a következő szervereket, és automatikusan kiválasztja a leggyorsabbat:",
   "selectFastestServer": "Leggyorsabb szerver kiválasztása",
-  "pingStatus": ""
+  "pingStatus": "",
+  "downloadLink": "Letöltési link",
+  "noContentLength": "Figyelmeztetés: Nem érkezett content-length fejléc.",
+  "opening": "Megnyitás",
+  "downloadComplete": "Letöltés kész!",
+  "downloading": "Letöltés"
 }

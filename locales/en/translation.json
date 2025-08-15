@@ -11,6 +11,7 @@
   "helloWorld": "Hello World",
   "appTitle": "LibGen Book Search",
   "search": "Search",
+  "searching": "Searching...",
   "noResults": "No results.",
   "publisher": "Publisher",
   "language": "Language",
@@ -32,5 +33,10 @@
   "libgenServerSelection": "Libgen server selection",
   "libgenPingDescription": "This feature pings the following servers and automatically selects the fastest one:",
   "selectFastestServer": "Select fastest server",
-  "pingStatus": ""
+  "pingStatus": "",
+  "downloadLink": "Download link",
+  "noContentLength": "Warning: No content-length header was received.",
+  "opening": "Opening",
+  "downloadComplete": "Download complete!",
+  "downloading": "Downloading"
 }
