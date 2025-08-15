@@ -181,7 +181,7 @@ ipcMain.handle('start-download', async (event, md5, extension) => {
   const detailUrl = `https://${libgenServer}/ads.php?md5=${md5}`;
 
   try {
-    event.sender.send('download-status', 'Megnyitás: ' + detailUrl);
+    event.sender.send('download-status', { key: 'opening', value: detailUrl });
 
     const detailResponse = await axios.get(detailUrl);
     const $ = require('cheerio').load(detailResponse.data);
@@ -193,7 +193,7 @@ ipcMain.handle('start-download', async (event, md5, extension) => {
     }
 
     const fullLink = getLink.startsWith('http') ? getLink : `https://${libgenServer}/${getLink}`;
-    event.sender.send('download-status', 'Letöltési link: ' + fullLink);
+    event.sender.send('download-status', { key: 'downloadLink', value: fullLink });
 
     const downloadsDir = path.join(downloadDir);
     if (!fs.existsSync(downloadsDir)) {
@@ -210,7 +210,7 @@ ipcMain.handle('start-download', async (event, md5, extension) => {
 
     const totalLength = parseInt(response.headers['content-length'], 10) || 0;
     if (!totalLength) {
-      event.sender.send('download-status', 'Figyelmeztetés: Nem érkezett content-length fejléc.');
+      event.sender.send('download-status', { key: 'noContentLength' });
     }
 
     const writer = fs.createWriteStream(filePath);
@@ -223,9 +223,10 @@ ipcMain.handle('start-download', async (event, md5, extension) => {
           return;
         }
         const downloadedLength = stats.size;
-        event.sender.send('download-status',
-          `Letöltés: ${(downloadedLength / 1024 / 1024).toFixed(2)} MB / ${(totalLength / 1024 / 1024).toFixed(2)} MB`
-        );
+        event.sender.send('download-status', {
+          key: 'downloading',
+          value: `${(downloadedLength / 1024 / 1024).toFixed(2)} MB / ${(totalLength / 1024 / 1024).toFixed(2)} MB`
+        });
       });
     }, 1500); // in millisecond
 
@@ -235,7 +236,7 @@ ipcMain.handle('start-download', async (event, md5, extension) => {
     });
 
     clearInterval(intervalId);
-    event.sender.send('download-status', 'Letöltés kész!');
+    event.sender.send('download-status', { key: 'downloadComplete' });
     event.sender.send('download-done', filePath);
 
     return { success: true, filePath };

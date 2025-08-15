@@ -75,7 +75,13 @@ async function showPage(page) {
     if (page === 'downloadProgress') {
       window.electronAPI.onDownloadStatus((event, status) => {
         const statusDiv = document.getElementById('downloadStatus');
-        if (statusDiv) {
+        if (!statusDiv) return;       
+        if (typeof status === 'object' && status.key && status.value) {
+          statusDiv.textContent = i18next.t(status.key) + ": " + status.value;
+        }
+        else if (typeof status === 'object' && status.key) {
+          statusDiv.textContent = i18next.t(status.key);
+        } else {
           statusDiv.textContent = status;
         }
       });
@@ -139,7 +145,7 @@ async function showPage(page) {
         const newPath = dirInput.value;
         const result = await window.electronAPI.setConfig(newPath);
         if (result.success) {
-          status.style.display= 'block';
+          status.hidden = false;
           savePath.textContent = `${result.path}`;
           status.style.color = 'green';
           currentDirText.textContent = result.path;
@@ -211,8 +217,8 @@ async function performSearch() {
   const table = document.getElementById('resultsTable');
   const tbody = table.querySelector('tbody');
 
-  status.textContent = 'Keresés...';
-  table.style.display = 'none';
+  status.textContent = i18next.t('searching');
+  table.hidden = true;
   tbody.innerHTML = '';
 
   const results = await window.electronAPI.fetchLibgen(query);
@@ -227,7 +233,7 @@ async function performSearch() {
   }
 
   status.textContent = `${results.length} results.`;
-  table.style.display = 'table';
+  table.hidden = false;
 
   results.forEach(book => {
     const row = document.createElement('tr');
